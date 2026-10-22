@@ -2,5 +2,5 @@
 # sidebar footer balance widget (client).
 - insert:
     - id: quota-panel
-      name: '@local/dsh-quota-panel'
+      name: 'dsh-quota-board'
       config: {}
