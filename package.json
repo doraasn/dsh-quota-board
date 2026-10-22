@@ -1,5 +1,5 @@
 {
-  "name": "@local/dsh-quota-panel",
+  "name": "dsh-quota-board",
   "description": "DSH 侧栏额度看板：Codex 额度 + 中转站 / 官方 API 余额",
   "version": "0.10.24",
   "type": "module",
@@ -45,5 +45,16 @@
     "client": {
       "platform": "web"
     }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/doraasn/dsh-quota-board.git"
+  },
+  "homepage": "https://github.com/doraasn/dsh-quota-board#readme",
+  "bugs": {
+    "url": "https://github.com/doraasn/dsh-quota-board/issues"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
