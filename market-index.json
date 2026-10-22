@@ -1,0 +1,102 @@
+{
+    "format":  1,
+    "title":  {
+                  "zh":  "额度看板",
+                  "en":  "Quota Board"
+              },
+    "description":  {
+                        "zh":  "DSH 侧栏额度看板：Codex 额度与本机 CLI 同步，中转站 / 官方 API 余额一屏可见。",
+                        "en":  "Quota board for the DSH sidebar: Codex limits from the local CLI plus relay and official API balances at a glance."
+                    },
+    "metadata":  {
+                     "categories":  {
+                                        "quota":  {
+                                                      "title":  {
+                                                                    "zh":  "额度与用量",
+                                                                    "en":  "Quota \u0026 usage"
+                                                                }
+                                                  }
+                                    },
+                     "labels":  {
+                                    "codex":  {
+                                                  "title":  {
+                                                                "zh":  "Codex",
+                                                                "en":  "Codex"
+                                                            }
+                                              },
+                                    "sidebar":  {
+                                                    "title":  {
+                                                                  "zh":  "侧栏",
+                                                                  "en":  "Sidebar"
+                                                              }
+                                                },
+                                    "no-deps":  {
+                                                    "title":  {
+                                                                  "zh":  "零依赖",
+                                                                  "en":  "Zero dependency"
+                                                              }
+                                                }
+                                },
+                     "sortKeys":  {
+                                      "added":  {
+                                                    "title":  {
+                                                                  "zh":  "收录时间",
+                                                                  "en":  "Added"
+                                                              },
+                                                    "order":  "desc"
+                                                }
+                                  }
+                 },
+    "plugins":  [
+                    {
+                        "name":  "dsh-quota-board",
+                        "title":  {
+                                      "zh":  "额度看板",
+                                      "en":  "Quota Board"
+                                  },
+                        "description":  {
+                                            "zh":  "侧栏卡片显示 Codex 的 5 小时 / 周额度与重置次数，以及任意 OpenAI 兼容中转站、DeepSeek、智谱 Z.AI 的余额。支持多供应商、多账号、拖动排序、显示开关与字段映射。",
+                                            "en":  "Sidebar cards show Codex 5-hour and weekly limits with reset count, plus balances of any OpenAI-compatible relay, DeepSeek and Zhipu Z.AI. Multiple providers and accounts, drag to reorder, visibility switches and field mapping."
+                                        },
+                        "icon":  "icon.svg",
+                        "author":  "doraasn",
+                        "homepage":  "https://github.com/doraasn/dsh-quota-board",
+                        "repository":  {
+                                           "url":  "https://github.com/doraasn/dsh-quota-board"
+                                       },
+                        "metadata":  {
+                                         "category":  "quota",
+                                         "keywords":  [
+                                                          "quota",
+                                                          "balance",
+                                                          "codex",
+                                                          "sidebar",
+                                                          "deepseek",
+                                                          "zai"
+                                                      ],
+                                         "labels":  [
+                                                        "codex",
+                                                        "sidebar",
+                                                        "no-deps"
+                                                    ],
+                                         "sortKeys":  {
+                                                          "added":  1792659600
+                                                      }
+                                     },
+                        "versions":  [
+                                         {
+                                             "version":  "0.10.21",
+                                             "publishTimestamp":  1792688533,
+                                             "source":  {
+                                                            "type":  "git",
+                                                            "url":  "https://github.com/doraasn/dsh-quota-board.git",
+                                                            "commit":  "58f4ecad90f0f601db5397d71866e628ec11cef2"
+                                                        },
+                                             "engines":  {
+                                                             "dsh":  "\u003e=0.2.1-rc.2"
+                                                         }
+                                         }
+                                     ]
+                    }
+                ]
+}
