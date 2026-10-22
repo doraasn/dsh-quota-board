@@ -1,0 +1,59 @@
+{
+  "name": "dsh-quota-board",
+  "description": "DSH 侧栏额度看板：Codex 额度 + 中转站 / 官方 API 余额",
+  "version": "0.10.21",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/",
+    "test/",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "dsh": ">=0.2.1-rc.2"
+  },
+  "scripts": {
+    "test": "node test/run.mjs"
+  },
+  "license": "MIT",
+  "author": "Y77H",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "dsh-bundle",
+    "quota",
+    "balance",
+    "sidebar",
+    "codex"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/doraasn/dsh-quota-board.git"
+  },
+  "homepage": "https://github.com/doraasn/dsh-quota-board#readme",
+  "bugs": {
+    "url": "https://github.com/doraasn/dsh-quota-board/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  }
+}
