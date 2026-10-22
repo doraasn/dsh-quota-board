@@ -1,5 +1,5 @@
 {
-  "name": "dsh-quota-board",
+  "name": "@local/dsh-quota-panel",
   "description": "DSH 侧栏额度看板：Codex 额度 + 中转站 / 官方 API 余额",
   "version": "0.10.21",
   "type": "module",
@@ -24,7 +24,8 @@
     "dsh": ">=0.2.1-rc.2"
   },
   "scripts": {
-    "test": "node test/run.mjs"
+    "test": "node test/run.mjs",
+    "build:publish": "node scripts/build-publish.mjs"
   },
   "license": "MIT",
   "author": "Y77H",
@@ -37,17 +38,6 @@
     "sidebar",
     "codex"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/doraasn/dsh-quota-board.git"
-  },
-  "homepage": "https://github.com/doraasn/dsh-quota-board#readme",
-  "bugs": {
-    "url": "https://github.com/doraasn/dsh-quota-board/issues"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
