@@ -5,3 +5,7 @@ temp/
 .DS_Store
 .credentials.yaml
 publish/
+
+# 发布用的压缩包要进仓库，供 CDN 直链分发
+!dist/
+!dist/*.tgz
