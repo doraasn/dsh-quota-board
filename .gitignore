@@ -1,7 +1,0 @@
-﻿node_modules/
-*.tgz
-temp/
-*.log
-.DS_Store
-.credentials.yaml
-publish/
