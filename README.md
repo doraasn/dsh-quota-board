@@ -197,3 +197,15 @@ MIT
 
 右侧放不下时自动翻到卡片左侧。
 
+## 安装（国内网络）
+
+DSH 安装 git 插件时是**由本机直接去 GitHub 下载 tarball**，不经过插件市场或镜像源。所以没有代理的网络会报「无法连接 github.com」。
+
+三种方式任选：
+
+| 方式 | 做法 |
+|---|---|
+| 压缩包直链（CDN）| 在插件市场选「压缩包」，填 https://cdn.jsdelivr.net/gh/doraasn/dsh-quota-board@v0.11.5/dist/dsh-quota-board-0.11.5.tgz |
+| npm | 发布到 npm 后，在市场里直接按包名安装，走你本机配置的 registry（npmmirror 可达）|
+| 代理 | 让 DSH 走代理后再从市场安装 |
+
