@@ -55,8 +55,8 @@ if (!client.includes(idPattern)) {
 }
 write('lib/client.js', client.replace(idPattern, `id: "${PUBLISH_NAME}"`))
 
-// 4) 其余文件原样复制（README 里的包名同步替换）
-for (const rel of ['lib/index.js', 'README.md', 'LICENSE', 'test/run.mjs']) {
+// 4) 其余文件原样复制（README 里的包名同步替换）；icon.svg 供「已安装」列表取图
+for (const rel of ['lib/index.js', 'README.md', 'LICENSE', 'test/run.mjs', 'icon.svg']) {
   copy(rel)
 }
 write('README.md', read('README.md').replaceAll(LOCAL_NAME, PUBLISH_NAME))
