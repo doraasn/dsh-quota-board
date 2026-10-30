@@ -5,7 +5,7 @@
   "type": "module",
   "main": "lib/index.js",
   "exports": {
-    './icon': './icon.svg',
+    "./icon": "./icon.svg",
     ".": {
       "default": "./lib/index.js"
     },
