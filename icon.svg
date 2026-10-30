@@ -1,8 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="额度看板">
-  <rect width="512" height="512" rx="112" fill="#0f1115"/>
-  <rect x="96" y="288" width="56" height="128" rx="20" fill="#43c982"/>
-  <rect x="176" y="224" width="56" height="192" rx="20" fill="#43c982"/>
-  <rect x="256" y="256" width="56" height="160" rx="20" fill="#f9fafb"/>
-  <rect x="336" y="160" width="56" height="256" rx="20" fill="#f9fafb"/>
-  <rect x="96" y="112" width="296" height="24" rx="12" fill="#4b4b4f"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Quota Board">
+  <path d="M6.2 20.2v-5.6"/>
+  <path d="M12 20.2V10"/>
+  <path d="M17.8 20.2V4.6"/>
 </svg>
