@@ -1,13 +1,15 @@
 <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Quota Board">
-  <rect x="7" y="19.4" width="6.8" height="9.8" rx="2.2" fill="#7CB7FF" />
-  <rect x="14.6" y="13.6" width="6.8" height="15.6" rx="2.2" fill="url(#qb-mid)" />
-  <rect x="22.2" y="7.8" width="6.8" height="21.4" rx="2.2" fill="url(#qb-top)" />
+  <g transform="translate(18 18) scale(0.88) translate(-18 -18)">
+  <rect x="6.6" y="19" width="7.2" height="10.2" rx="2.2" fill="#63A6FF" />
+  <rect x="14.4" y="13.4" width="7.2" height="15.8" rx="2.2" fill="url(#qb-mid)" />
+  <rect x="22.2" y="7.8" width="7.2" height="21.4" rx="2.2" fill="url(#qb-top)" />
+  </g>
   <defs>
-    <linearGradient id="qb-mid" x1="18" y1="13.6" x2="18" y2="29.2" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#7CB7FF" />
+    <linearGradient id="qb-mid" x1="18" y1="13.4" x2="18" y2="29.2" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#63A6FF" />
       <stop offset="1" stop-color="#145AF3" />
     </linearGradient>
-    <linearGradient id="qb-top" x1="25.6" y1="7.8" x2="25.6" y2="29.2" gradientUnits="userSpaceOnUse">
+    <linearGradient id="qb-top" x1="25.8" y1="7.8" x2="25.8" y2="29.2" gradientUnits="userSpaceOnUse">
       <stop stop-color="#A797FC" />
       <stop offset="1" stop-color="#4561EE" />
     </linearGradient>
