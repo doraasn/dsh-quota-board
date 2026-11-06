@@ -104,7 +104,7 @@ DSH（DeepSeek Harness）侧栏额度看板。在侧栏底部显示两张卡片�
   ```yaml
   - insert:
       - id: quota-panel
-        name: '@local/dsh-quota-panel'
+        name: 'dsh-quota-board'
         config:
           astraBaseUrl: https://your-relay.example.com
           astraCredential: YOUR_RELAY_API_KEY
