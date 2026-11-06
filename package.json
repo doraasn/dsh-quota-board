@@ -1,5 +1,5 @@
 {
-  "name": "@local/dsh-quota-panel",
+  "name": "@local/dsh-quota-board",
   "description": "DSH 侧栏额度看板：Codex 额度 + 中转站 / 官方 API 余额",
   "version": "0.12.1",
   "type": "module",

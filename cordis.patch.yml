@@ -1,6 +1,6 @@
-# dsh-quota-panel: mounts the quota data API route (host) and the
+# dsh-quota-board: mounts the quota data API route (host) and the
 # sidebar footer balance widget (client).
 - insert:
     - id: quota-panel
-      name: '@local/dsh-quota-panel'
+      name: '@local/dsh-quota-board'
       config: {}

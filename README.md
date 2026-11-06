@@ -1,4 +1,4 @@
-# dsh-quota-panel
+# dsh-quota-board
 
 DSH（DeepSeek Harness）侧栏额度看板。在侧栏底部显示两张卡片：
 
@@ -29,7 +29,7 @@ DSH（DeepSeek Harness）侧栏额度看板。在侧栏底部显示两张卡片�
 
 1. 侧栏 → **插件** → **添加插件**
 2. 粘贴压缩包的**绝对路径**，例如
-   `C:\Users\你的用户名\Downloads\local-dsh-quota-panel-0.1.0.tgz`
+   `C:\Users\你的用户名\Downloads\local-dsh-quota-board-0.1.0.tgz`
    （也支持本地目录绝对路径、Git 地址、npm 包名）
 3. 安装完成后启用该组合包；若提示需要重启，重启 DSH。
 
@@ -104,7 +104,7 @@ DSH（DeepSeek Harness）侧栏额度看板。在侧栏底部显示两张卡片�
   ```yaml
   - insert:
       - id: quota-panel
-        name: '@local/dsh-quota-panel'
+        name: '@local/dsh-quota-board'
         config:
           astraBaseUrl: https://your-relay.example.com
           astraCredential: YOUR_RELAY_API_KEY
@@ -161,7 +161,7 @@ DSH（DeepSeek Harness）侧栏额度看板。在侧栏底部显示两张卡片�
 | 每张卡标题右侧的开关 | 只控制这一张卡在侧栏显示/隐藏，可以逐张关到一张不剩 |
 
 - 两者都**立即生效**，按设备存在 `localStorage`，不走「保存」。
-- 总开关是 `dsh-quota-panel.enabled`，每卡开关是 `dsh-quota-panel.show`。
+- 总开关是 `dsh-quota-board.enabled`，每卡开关是 `dsh-quota-board.show`。
 - Codex 卡内部还有 4 个内容开关（见「配置」），只影响那张卡显示哪些数字。
 
 ## 常见问题
