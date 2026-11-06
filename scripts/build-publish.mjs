@@ -14,7 +14,6 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const LOCAL_NAME = '@local/dsh-quota-panel'
 const PUBLISH_NAME = 'dsh-quota-board'
 const OUT_FLAG = process.argv.indexOf('--out')
 const OUT = path.resolve(ROOT, OUT_FLAG > 0 ? process.argv[OUT_FLAG + 1] : 'publish')
@@ -33,8 +32,9 @@ const copy = (rel) => {
 
 fs.rmSync(OUT, { recursive: true, force: true })
 
-// 1) package.json：改名 + 补发布字段
+// 1) package.json：改名 + 补发布字段（开发身份直接读 package.json，改名后不用再改脚本）
 const pkg = JSON.parse(read('package.json'))
+const LOCAL_NAME = pkg.name
 pkg.name = PUBLISH_NAME
 pkg.repository = { type: 'git', url: 'git+https://github.com/doraasn/dsh-quota-board.git' }
 pkg.homepage = 'https://github.com/doraasn/dsh-quota-board#readme'
