@@ -14,9 +14,13 @@ const { apply } = await import(new URL('../lib/index.js', import.meta.url).href)
 
 /** 把宿主注册的路由抓出来，直接调用。 */
 let handler = null
+let dispose = null
+const SELF_ORIGIN = 'http://127.0.0.1:59681'
+const HOST = '127.0.0.1:59681'
 const ctx = {
-  webServer: { register: (route) => { handler = route.handler } },
-  effect: () => () => {},
+  webServer: { register: (route) => { handler = route.handler }, getOrigin: () => SELF_ORIGIN },
+  /** 收集清理函数：测试结束时必须停掉定时器与 codex 子进程，否则 process.exit 会撞 uv 断言。 */
+  effect: (fn) => { dispose = fn() },
 }
 apply(ctx, {})
 
@@ -31,12 +35,13 @@ const check = (name, condition, extra = '') => {
   }
 }
 
-/** 发一个假请求，收 JSON。 */
-const call = (url, method = 'GET', body = null) => new Promise((resolve) => {
+/** 发一个假请求，收 JSON。headers 用于验证 Host / Origin 防护。 */
+const call = (url, method = 'GET', body = null, headers = { host: HOST }) => new Promise((resolve) => {
   const listeners = {}
   const req = {
     url,
     method,
+    headers,
     on(event, cb) { listeners[event] = cb },
     setEncoding() {},
     destroy() {},
@@ -52,7 +57,8 @@ const call = (url, method = 'GET', body = null) => new Promise((resolve) => {
   }
   handler(req, res)
   if (body !== null) {
-    listeners.data?.(Buffer.from(JSON.stringify(body)))
+    const raw = typeof body === 'string' ? body : JSON.stringify(body)
+    listeners.data?.(Buffer.from(raw))
     listeners.end?.()
   }
 })
@@ -132,6 +138,43 @@ check('超过上限被截断到 12', tooMany.body.providers.length === 12, `实�
 const stored = path.join(HOME, 'storages', 'quota-panel.json')
 check('设置写入 storages/quota-panel.json', fs.existsSync(stored))
 
+// ---- 6. 本机同源防护（防 CSRF / DNS rebinding / 凭据外流）----
+const rebind = await call('/dsh-quota/api/settings', 'GET', null, { host: 'evil.example' })
+check('非回环 Host 被拒（DNS rebinding）', rebind.status === 403 && rebind.body.error === 'forbidden-host', `实际 ${rebind.status}`)
+
+const csrf = await call('/dsh-quota/api/probe', 'POST', { baseUrl: 'http://127.0.0.1:9', apiKey: 'sk-x' }, { host: HOST, origin: 'https://evil.example' })
+check('跨站 Origin 被拒（CSRF）', csrf.status === 403 && csrf.body.error === 'forbidden-origin', `实际 ${csrf.status}`)
+
+const sandboxed = await call('/dsh-quota/api/settings', 'POST', { providers: [] }, { host: HOST, origin: 'null' })
+check('Origin: null 被拒', sandboxed.status === 403, `实际 ${sandboxed.status}`)
+
+const sameOrigin = await call('/dsh-quota/api/settings', 'GET', null, { host: HOST, origin: SELF_ORIGIN })
+check('同源 Origin 放行', sameOrigin.status === 200)
+
+// 凭据只回到它自己的站点：即使宿主真的保存着 key，也不能被带到别的 host。
+fs.mkdirSync(path.join(HOME, 'storages'), { recursive: true })
+fs.writeFileSync(path.join(HOME, '.credentials.yaml'), 'refs:\n  ASTRA_HUB_API_KEY: sk-stored-secret\n')
+await call('/dsh-quota/api/settings', 'POST', {
+  providers: [{ id: 'astra-hub', kind: 'relay', name: 'AstraHub', baseUrl: 'https://www.astrahub-ai.com', credential: 'ASTRA_HUB_API_KEY' }],
+}, { host: HOST, origin: SELF_ORIGIN })
+const withKey = await call('/dsh-quota/api/settings', 'GET', null, { host: HOST, origin: SELF_ORIGIN })
+const astra = withKey.body.providers.find((p) => p.id === 'astra-hub')
+check('宿主能读到已保存的 key', astra?.hasApiKey === true)
+
+const crossHost = await call('/dsh-quota/api/probe', 'POST', { providerId: 'astra-hub', baseUrl: 'http://127.0.0.1:9' }, { host: HOST, origin: SELF_ORIGIN })
+check('已保存的 key 不会被发往别的 host', crossHost.status === 400 && crossHost.body.error === 'missing-api-key', `实际 ${crossHost.status} ${crossHost.body?.error}`)
+
+// 凭据名里的正则元字符必须当字面量：".*" 不能变成「文件里第一个值」。
+const weird = await call('/dsh-quota/api/settings', 'POST', {
+  providers: [{ id: 'weird', kind: 'relay', name: 'Weird', baseUrl: 'https://example.com', credential: '.*' }],
+}, { host: HOST, origin: SELF_ORIGIN })
+check('凭据名按字面量匹配，不注入正则', weird.body.providers[0].hasApiKey === false)
+
+const huge = await call('/dsh-quota/api/probe', 'POST', 'x'.repeat(70 * 1024), { host: HOST, origin: SELF_ORIGIN })
+check('超大 body 返回 413', huge.status === 413, `实际 ${huge.status}`)
+
 fs.rmSync(HOME, { recursive: true, force: true })
+dispose?.()
 console.log(`\n结果: ${passed} 通过 / ${failed} 失败`)
-process.exit(failed === 0 ? 0 : 1)
+// 不用 process.exit()：Windows 上若子进程句柄还在关闭中，会撞 libuv 断言（退出码 0xC0000409）。
+process.exitCode = failed === 0 ? 0 : 1
