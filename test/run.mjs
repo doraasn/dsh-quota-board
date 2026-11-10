@@ -151,6 +151,13 @@ check('Origin: null 被拒', sandboxed.status === 403, `实际 ${sandboxed.statu
 const sameOrigin = await call('/dsh-quota/api/settings', 'GET', null, { host: HOST, origin: SELF_ORIGIN })
 check('同源 Origin 放行', sameOrigin.status === 200)
 
+// localhost 与 127.0.0.1 是同一个服务：端口一致就应放行，否则用户从 localhost 打开发设置页会 403
+const localhostOrigin = await call('/dsh-quota/api/settings', 'GET', null, { host: HOST, origin: 'http://localhost:59681' })
+check('localhost 同端口放行', localhostOrigin.status === 200, `实际 ${localhostOrigin.status}`)
+
+const otherPort = await call('/dsh-quota/api/settings', 'GET', null, { host: HOST, origin: 'http://127.0.0.1:59682' })
+check('端口不同被拒', otherPort.status === 403, `实际 ${otherPort.status}`)
+
 // 凭据只回到它自己的站点：即使宿主真的保存着 key，也不能被带到别的 host。
 fs.mkdirSync(path.join(HOME, 'storages'), { recursive: true })
 fs.writeFileSync(path.join(HOME, '.credentials.yaml'), 'refs:\n  ASTRA_HUB_API_KEY: sk-stored-secret\n')
