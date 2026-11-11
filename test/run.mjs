@@ -10,7 +10,7 @@ import path from 'node:path'
 const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-quota-board-test-'))
 process.env.DSH_HOME = HOME
 
-const { apply } = await import(new URL('../lib/index.js', import.meta.url).href)
+const { apply, resetLabel } = await import(new URL('../lib/index.js', import.meta.url).href)
 
 /** 把宿主注册的路由抓出来，直接调用。 */
 let handler = null
@@ -63,6 +63,18 @@ const call = (url, method = 'GET', body = null, headers = { host: HOST }) => new
   }
 })
 
+// ---- 0. 重置时间文案 ----
+{
+  const now = new Date(2026, 10, 11, 22, 30, 0);            // 11-11 22:30 本地
+  const tomorrow = Math.floor(new Date(2026, 10, 12, 4, 11, 0).getTime() / 1000);
+  const later = Math.floor(new Date(2026, 10, 20, 9, 5, 0).getTime() / 1000);
+  check('5 小时窗口跨午夜只写时刻', resetLabel(tomorrow, now, { withDay: false }) === '04:11',
+    `实际 ${resetLabel(tomorrow, now, { withDay: false })}`)
+  check('周窗口仍保留「明天」', resetLabel(tomorrow, now) === '明天 04:11',
+    `实际 ${resetLabel(tomorrow, now)}`)
+  check('远期窗口写月日', resetLabel(later, now) === '11/20 09:05',
+    `实际 ${resetLabel(later, now)}`)
+}
 // ---- 1. 默认设置 ----
 const settings = await call('/dsh-quota/api/settings')
 check('GET settings 返回 200', settings.status === 200)
