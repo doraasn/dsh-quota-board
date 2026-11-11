@@ -110,7 +110,7 @@ try {
   if (remoteMain !== head) throw new Error(`远端 main ${remoteMain.slice(0, 8)} ≠ 本地 HEAD ${head.slice(0, 8)}`)
   if (remoteTag !== snapshot) throw new Error(`远端 tag ${remoteTag.slice(0, 8)} ≠ 快照 ${snapshot.slice(0, 8)}`)
   console.log(`\n✓ 已推送：main ${head.slice(0, 8)}，${tag} → ${snapshot.slice(0, 8)}`)
-  console.log(`  报告给索引维护方：${pkg.name} / ${tag} / ${snapshot}`)
+  console.log(`  报告给索引维护方：${shipped.name} / ${tag} / ${snapshot}`)
 } finally {
   fs.rmSync(indexPath, { force: true })
 }
