@@ -10,7 +10,7 @@ import path from 'node:path'
 const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-quota-board-test-'))
 process.env.DSH_HOME = HOME
 
-const { apply, resetLabel } = await import(new URL('../lib/index.js', import.meta.url).href)
+const { apply, resetLabel, toWidgetState } = await import(new URL('../lib/index.js', import.meta.url).href)
 
 /** 把宿主注册的路由抓出来，直接调用。 */
 let handler = null
@@ -63,6 +63,19 @@ const call = (url, method = 'GET', body = null, headers = { host: HOST }) => new
   }
 })
 
+// ---- 0. 免费版 Codex 没有周额度 ----
+{
+  const now = new Date(2026, 10, 12, 10, 0, 0)
+  const resetsAt = Math.floor(new Date(2026, 10, 12, 14, 30, 0).getTime() / 1000)
+  const free = toWidgetState({ rateLimits: { primary: { usedPercent: 30, resetsAt } } }, now)
+  check('免费版：没有周额度时 weekly 为 null', free.weekly === null, `实际 ${JSON.stringify(free.weekly)}`)
+  check('免费版：5 小时窗口仍可用', free.fiveHour?.remaining === 70 && free.fiveHour?.reset === '14:30',
+    `实际 ${JSON.stringify(free.fiveHour)}`)
+  const paid = toWidgetState({
+    rateLimits: { primary: { usedPercent: 30, resetsAt }, secondary: { usedPercent: 80, resetsAt } },
+  }, now)
+  check('付费版：有周额度时 weekly 是对象', paid.weekly?.remaining === 20, `实际 ${JSON.stringify(paid.weekly)}`)
+}
 // ---- 0. 重置时间文案 ----
 {
   const now = new Date(2026, 10, 11, 22, 30, 0);            // 11-11 22:30 本地
