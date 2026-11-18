@@ -195,8 +195,32 @@ MIT
 
 - Codex 卡：5 小时、周、5 小时重置、周重置、重置次数
 - 中转站 / 官方 API：余额、已用、总额、今日
+- 「今日预估 / 预估花费」两行只在悬浮窗里出现，侧栏卡片本身不加字段
 
 右侧放不下时自动翻到卡片左侧。
+
+## 今日预估用量 / 花费
+
+官方 API key 只能查余额（`/user/balance`），**查不到逐 key 的每日 token 与花费**——那些数只在
+platform.deepseek.com 的登录态接口里，API key 认证不了。所以这两项是**本机估算**：
+
+- 数据源：`~/.dsh/sessions/<工作区>/<会话>/session.v4.jsonl.zstd`（明文 v3 日志同样支持）。
+  每次模型请求落一条 `assistant/message`，带 `usage.inputTokens / outputTokens /
+  cacheReadTokens / cacheWriteTokens`，按日志里的毫秒时间戳归到本地自然日。
+- 价目表：官方 2026-11 公开价（美元 / 1M tokens）——缓存命中输入 $0.003、未命中输入 $0.15、
+  输出 $0.6，按 **USD:CNY = 7** 折算。峰谷价差一倍，这里**统一按峰值价**算，结果是当日花费上限。
+- 账本：`~/.dsh/storages/quota-panel-usage.json`，记录每个日志文件已读到的字节与按日累计值，
+  只读新增内容；保留最近 31 天。**只读会话日志，从不修改 DSH 自己的文件。**
+- 口径：只算本机，不含其他设备/工具用同一个 key 的消耗；子代理、摘要请求各有会话文件，一并计入。
+- 想改切日时刻：环境变量 `QUOTA_DAY_START_HOUR`（0–23，默认 0 = 本地 0 点）。
+
+### 每日消费面板
+
+**点侧栏任意额度卡**（整行可点）弹出「<供应商名> · 每日消费」，列出最近 7 天每天的
+预估花费、输入/输出 token 与请求次数；再点一次、点面板外部或按 `Esc` 关闭。
+触屏没有 hover，这个点击入口就是悬浮详情的替代。
+
+面板顶部标注「预估」，底部写明估算口径与价目表来源。
 
 ## 安装（国内网络）
 
@@ -206,7 +230,7 @@ DSH 安装 git 插件时是**由本机直接去 GitHub 下载 tarball**，不经
 
 | 方式 | 做法 |
 |---|---|
-| 压缩包直链（CDN）| 在插件市场选「压缩包」，填 https://cdn.jsdelivr.net/gh/doraasn/dsh-quota-board@main/dist/dsh-quota-board-0.12.2.tgz |
+| 压缩包直链（CDN）| 在插件市场选「压缩包」，填 https://cdn.jsdelivr.net/gh/doraasn/dsh-quota-board@main/dist/dsh-quota-board-0.12.7.tgz |
 | npm | 发布到 npm 后，在市场里直接按包名安装，走你本机配置的 registry（npmmirror 可达）|
 | 代理 | 让 DSH 走代理后再从市场安装 |
 

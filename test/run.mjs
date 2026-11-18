@@ -11,6 +11,7 @@ const HOME = fs.mkdtempSync(path.join(os.tmpdir(), 'dsh-quota-board-test-'))
 process.env.DSH_HOME = HOME
 
 const { apply, resetLabel, toWidgetState } = await import(new URL('../lib/index.js', import.meta.url).href)
+const usage = await import(new URL('../lib/index.js', import.meta.url).href)
 
 /** 把宿主注册的路由抓出来，直接调用。 */
 let handler = null
@@ -204,6 +205,61 @@ check('凭据名按字面量匹配，不注入正则', weird.body.providers[0].h
 
 const huge = await call('/dsh-quota/api/probe', 'POST', 'x'.repeat(70 * 1024), { host: HOST, origin: SELF_ORIGIN })
 check('超大 body 返回 413', huge.status === 413, `实际 ${huge.status}`)
+
+// ---- 7. 今日预估用量/花费（本机会话日志账本）----
+{
+  const now = Date.now()
+  const day = (offset) => {
+    const d = new Date(now)
+    d.setDate(d.getDate() - offset)
+    return d.getTime()
+  }
+  // 造一份会话日志：今天两条 assistant/message，昨天一条，一条无 usage 的行
+  const sessionDir = path.join(HOME, 'sessions', 'ws', 's1')
+  fs.mkdirSync(sessionDir, { recursive: true })
+  const logLines = [
+    JSON.stringify({ type: 'user/message', time: day(0) }),
+    JSON.stringify({ type: 'assistant/message', time: day(0), data: { usage: { inputTokens: 1000000, outputTokens: 1000000, cacheReadTokens: 0 } } }),
+    JSON.stringify({ type: 'assistant/message', time: day(0), data: { usage: { inputTokens: 2000000, outputTokens: 0, cacheReadTokens: 1500000 } } }),
+    JSON.stringify({ type: 'assistant/message', time: day(1), data: { usage: { inputTokens: 1000000, outputTokens: 0 } } }),
+  ]
+  fs.writeFileSync(path.join(sessionDir, 'session.v4.jsonl'), logLines.join('\n') + '\n')
+
+  const first = usage.estimateToday()
+  check('今日预估：只累计今天的 assistant/message', first.today.requests === 2, `实际 ${first.today.requests}`)
+  check('今日预估：输入/输出 token 正确', first.today.input === 3000000 && first.today.output === 1000000,
+    `实际 ${first.today.input}/${first.today.output}`)
+  check('今日预估：缓存命中 token 单独统计', first.today.cached === 1500000, `实际 ${first.today.cached}`)
+  // 峰值价：未命中 1M*0.15 + 命中 1.5M*0.003 + 输出 1M*0.6 + 未命中 2M(第1条) 见下方期望
+  // 第1条：1M 未命中输入 + 1M 输出 = 0.15+0.6=0.75 USD；第2条：0.5M 未命中 + 1.5M 命中 = 0.075+0.0045=0.0795 USD
+  const expectUsd = 0.75 + 0.0795
+  check('今日预估：按价目表折算', Math.abs(first.today.cost - expectUsd * 7) < 0.01,
+    `实际 ${first.today.cost} 期望 ${(expectUsd * 7).toFixed(4)}`)
+  check('今日预估：7 天窗口', first.days.length === 7 && first.days[5].cost > 0, `实际 ${first.days.length}`)
+
+  // 重复调用不重复计数（字节游标）
+  const again = usage.estimateToday()
+  check('重复扫描不重复累计', again.today.requests === 2 && Math.abs(again.today.cost - first.today.cost) < 1e-9,
+    `实际 ${again.today.requests}/${again.today.cost}`)
+
+  // 新增一行只累计这一行
+  fs.appendFileSync(path.join(sessionDir, 'session.v4.jsonl'),
+    JSON.stringify({ type: 'assistant/message', time: day(0), data: { usage: { inputTokens: 1, outputTokens: 1 } } }) + '\n')
+  const tail = usage.estimateToday()
+  check('增量读取只加新行', tail.today.requests === 3 && tail.today.input === 3000001,
+    `实际 ${tail.today.requests}/${tail.today.input}`)
+
+  // 路由
+  const usageRes = await call('/dsh-quota/api/usage')
+  check('GET /api/usage 返回 200', usageRes.status === 200)
+  check('/api/usage 带 today 与 rates', Boolean(usageRes.body.today && usageRes.body.rates?.usdToCny === 7))
+
+  // 只读：会话日志一个字节都不能被改动
+  globalThis.__logBefore = fs.readFileSync(path.join(sessionDir, 'session.v4.jsonl'))
+  const after = fs.readFileSync(path.join(sessionDir, 'session.v4.jsonl'))
+  check('不修改 DSH 自己的会话日志', Buffer.compare(globalThis.__logBefore, after) === 0)
+  delete globalThis.__logBefore
+}
 
 fs.rmSync(HOME, { recursive: true, force: true })
 dispose?.()
