@@ -261,51 +261,77 @@ check('超大 body 返回 413', huge.status === 413, `实际 ${huge.status}`)
   delete globalThis.__logBefore
 }
 
-// ---- 8. 按卡分账（byProvider）----
+// ---- 8. 按卡分账（byProvider，按上游 host 归属）----
 {
-  // 配置两张卡：一张声明 kaiaosi 系列模型，另一张不声明
+  // 一张卡指向 AstraHub 上游、一张指向智谱上游：模型按 host 归属，不按模型名猜 key。
   await call('/dsh-quota/api/settings', 'POST', {
     providers: [
-      { id: 'ceep', kind: 'relay', name: 'CeepSeek', baseUrl: 'https://example.com', models: ['deepseek-v4.1-flash-kaiaosi'] },
-      { id: 'other', kind: 'relay', name: 'Other', baseUrl: 'https://example.org' },
+      { id: 'astra', kind: 'relay', name: 'AstraHub', baseUrl: 'https://www.astrahub-ai.com' },
+      { id: 'zai', kind: 'relay', name: 'ZAI', baseUrl: 'https://open.bigmodel.cn/api/biz/account/query-customer-account-report' },
     ],
   }, { host: HOST, origin: SELF_ORIGIN })
 
-  // 造两天的日志：今天的 kaiaosi 一次、flash 两次，昨天的 kaiaosi 一次
   const dir = path.join(HOME, 'sessions', 'ws', 's2')
   fs.mkdirSync(dir, { recursive: true })
   const now = Date.now()
-  const day = (offset) => {
-    const d = new Date(now)
-    d.setDate(d.getDate() - offset)
-    return d.getTime()
-  }
   const line = (time, model, input) => JSON.stringify({
     type: 'assistant/message',
     time,
     data: { usage: { inputTokens: input, outputTokens: 0 }, message: { source: { model } } },
   }) + '\n'
   fs.writeFileSync(path.join(dir, 'session.v4.jsonl'), [
-    line(day(0), 'deepseek-v4.1-flash-kaiaosi', 1000000),
-    line(day(0), 'deepseek-v4.1-flash', 2000000),
-    line(day(0), 'deepseek-v4.1-flash', 1000000),
-    line(day(1), 'deepseek-v4.1-flash-kaiaosi', 500000),
+    line(now, 'GLM-5.3', 1000000),          // 智谱 → zai 卡
+    line(now, 'deepseek-v4.1-flash', 2000000), // deepseek 默认上游 → 没有卡认领 → shared
   ].join(''))
 
   const snapshot = usage.estimateToday()
-  const kaiaosi = snapshot.byProvider?.ceep
-  check('声明的模型归到对应卡', kaiaosi && kaiaosi.requests === 1, `实际 ${JSON.stringify(kaiaosi)}`)
-  // 之前用例也造过未声明模型的数据，这里断言「shared 里有它们、且不含已声明的 kaiaosi」
-  check('未声明的模型进 shared 池', (snapshot.byProvider?.shared?.requests || 0) >= 2
-    && (snapshot.byProvider?.shared?.input || 0) >= 3000000,
+  check('glm 模型归到智谱卡', (snapshot.byProvider?.zai?.requests || 0) >= 1,
+    `实际 ${JSON.stringify(Object.keys(snapshot.byProvider || {}))}`)
+  check('没有卡认领的上游进 shared', (snapshot.byProvider?.shared?.input || 0) >= 2000000,
     `实际 ${JSON.stringify(snapshot.byProvider?.shared)}`)
-  check('不参与分账的卡不出现在 byProvider', snapshot.byProvider?.other === undefined)
-  check('按卡分账的金额只含该模型', Math.abs((kaiaosi?.cost || 0) - 0.15 * 7) < 1e-6,
-    `实际 ${kaiaosi?.cost}`)
+  check('智谱卡的金额只含 glm 用量', Math.abs((snapshot.byProvider?.zai?.cost || 0) - 0.15 * 7) < 1e-6,
+    `实际 ${snapshot.byProvider?.zai?.cost}`)
 
-  // 精确值字段：relay 状态里带 remainingExact/spentExact/grantedExact
   const res = await call('/dsh-quota/api/usage')
   check('GET /api/usage 返回 byProvider', Boolean(res.body.byProvider))
+}
+
+// ---- 9. 曲线（半小时桶）与窗口合计 ----
+{
+  const dir = path.join(HOME, 'sessions', 'ws', 's3')
+  fs.mkdirSync(dir, { recursive: true })
+  const now = new Date()
+  const at = (hour, minute) => new Date(now.getFullYear(), now.getMonth(), now.getDate(), hour, minute, 0).getTime()
+  const line = (time, model, input) => JSON.stringify({
+    type: 'assistant/message',
+    time,
+    data: { usage: { inputTokens: input, outputTokens: 0 }, message: { source: { model } } },
+  }) + '\n'
+  fs.writeFileSync(path.join(dir, 'session.v4.jsonl'), [
+    line(at(9, 10), 'deepseek-v4.1-flash', 1000000),
+    line(at(9, 40), 'deepseek-v4.1-flash', 1000000),
+    line(at(15, 5), 'GLM-5.3', 1000000),
+  ].join(''))
+
+  const snapshot = usage.estimateToday()
+  const todaySeries = snapshot.series.filter((item) => item.day === snapshot.today.day && !item.backfill)
+  check('曲线数据按模型拆开', todaySeries.length >= 2, `实际 ${todaySeries.length}`)
+  const flash = todaySeries.find((item) => item.model === 'deepseek-v4.1-flash')
+  // 9:10 与 9:40 落在同一小时的两个半小时桶：slot 18 与 19
+  check('半小时桶落在正确位置', flash && flash.slots[18] > 0 && flash.slots[19] > 0,
+    `实际 ${flash ? flash.slots.map((v, i) => (v > 0 ? i : null)).filter((v) => v !== null).join(',') : 'no series'}`)
+  check('曲线合计 = 两笔金额', flash && Math.abs(flash.slots.reduce((a, b) => a + b, 0) - 4.2) < 1e-3,
+    `实际 ${flash && flash.slots.reduce((a, b) => a + b, 0)}`)
+
+  const buckets = Object.values(snapshot.byProvider)
+  check('每张卡带窗口合计', buckets.every((item) => item.total && typeof item.total.cost === 'number'))
+  check('每张卡带逐日花费', buckets.every((item) => item.daily && typeof item.daily === 'object'))
+
+  // 追加一行后不得重复计
+  const before = usage.estimateToday().today.requests
+  fs.appendFileSync(path.join(dir, 'session.v4.jsonl'), line(at(16, 0), 'deepseek-v4.1-flash', 1000))
+  const after = usage.estimateToday().today.requests
+  check('追加后只增一条', after === before + 1, `前 ${before} 后 ${after}`)
 }
 
 fs.rmSync(HOME, { recursive: true, force: true })
