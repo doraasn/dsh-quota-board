@@ -261,6 +261,53 @@ check('超大 body 返回 413', huge.status === 413, `实际 ${huge.status}`)
   delete globalThis.__logBefore
 }
 
+// ---- 8. 按卡分账（byProvider）----
+{
+  // 配置两张卡：一张声明 kaiaosi 系列模型，另一张不声明
+  await call('/dsh-quota/api/settings', 'POST', {
+    providers: [
+      { id: 'ceep', kind: 'relay', name: 'CeepSeek', baseUrl: 'https://example.com', models: ['deepseek-v4.1-flash-kaiaosi'] },
+      { id: 'other', kind: 'relay', name: 'Other', baseUrl: 'https://example.org' },
+    ],
+  }, { host: HOST, origin: SELF_ORIGIN })
+
+  // 造两天的日志：今天的 kaiaosi 一次、flash 两次，昨天的 kaiaosi 一次
+  const dir = path.join(HOME, 'sessions', 'ws', 's2')
+  fs.mkdirSync(dir, { recursive: true })
+  const now = Date.now()
+  const day = (offset) => {
+    const d = new Date(now)
+    d.setDate(d.getDate() - offset)
+    return d.getTime()
+  }
+  const line = (time, model, input) => JSON.stringify({
+    type: 'assistant/message',
+    time,
+    data: { usage: { inputTokens: input, outputTokens: 0 }, message: { source: { model } } },
+  }) + '\n'
+  fs.writeFileSync(path.join(dir, 'session.v4.jsonl'), [
+    line(day(0), 'deepseek-v4.1-flash-kaiaosi', 1000000),
+    line(day(0), 'deepseek-v4.1-flash', 2000000),
+    line(day(0), 'deepseek-v4.1-flash', 1000000),
+    line(day(1), 'deepseek-v4.1-flash-kaiaosi', 500000),
+  ].join(''))
+
+  const snapshot = usage.estimateToday()
+  const kaiaosi = snapshot.byProvider?.ceep
+  check('声明的模型归到对应卡', kaiaosi && kaiaosi.requests === 1, `实际 ${JSON.stringify(kaiaosi)}`)
+  // 之前用例也造过未声明模型的数据，这里断言「shared 里有它们、且不含已声明的 kaiaosi」
+  check('未声明的模型进 shared 池', (snapshot.byProvider?.shared?.requests || 0) >= 2
+    && (snapshot.byProvider?.shared?.input || 0) >= 3000000,
+    `实际 ${JSON.stringify(snapshot.byProvider?.shared)}`)
+  check('不参与分账的卡不出现在 byProvider', snapshot.byProvider?.other === undefined)
+  check('按卡分账的金额只含该模型', Math.abs((kaiaosi?.cost || 0) - 0.15 * 7) < 1e-6,
+    `实际 ${kaiaosi?.cost}`)
+
+  // 精确值字段：relay 状态里带 remainingExact/spentExact/grantedExact
+  const res = await call('/dsh-quota/api/usage')
+  check('GET /api/usage 返回 byProvider', Boolean(res.body.byProvider))
+}
+
 fs.rmSync(HOME, { recursive: true, force: true })
 dispose?.()
 console.log(`\n结果: ${passed} 通过 / ${failed} 失败`)
