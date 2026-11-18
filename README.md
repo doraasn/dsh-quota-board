@@ -205,8 +205,9 @@ MIT
 platform.deepseek.com 的登录态接口里，API key 认证不了。所以这两项是**本机估算**：
 
 - 数据源：`~/.dsh/sessions/<工作区>/<会话>/session.v4.jsonl.zstd`（明文 v3 日志同样支持）。
-  每次模型请求落一条 `assistant/message`，带 `usage.inputTokens / outputTokens /
-  cacheReadTokens / cacheWriteTokens`，按日志里的毫秒时间戳归到本地自然日。
+  每次模型请求落一条 `assistant/message`，带
+  `usage.inputTokens / outputTokens / cacheReadTokens / cacheWriteTokens`，
+  按日志里的毫秒时间戳归到本地自然日。
 - 价目表：官方 2026-11 公开价（美元 / 1M tokens）——缓存命中输入 $0.003、未命中输入 $0.15、
   输出 $0.6，按 **USD:CNY = 7** 折算。峰谷价差一倍，这里**统一按峰值价**算，结果是当日花费上限。
 - 账本：`~/.dsh/storages/quota-panel-usage.json`，记录每个日志文件已读到的字节与按日累计值，
