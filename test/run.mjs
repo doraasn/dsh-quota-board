@@ -242,11 +242,11 @@ check('超大 body 返回 413', huge.status === 413, `实际 ${huge.status}`)
   check('重复扫描不重复累计', again.today.requests === 2 && Math.abs(again.today.cost - first.today.cost) < 1e-9,
     `实际 ${again.today.requests}/${again.today.cost}`)
 
-  // 新增一行只累计这一行
+  // 追加一行：文件变大触发整份重扫（跨天补扫策略），结果必须仍然只多这一行
   fs.appendFileSync(path.join(sessionDir, 'session.v4.jsonl'),
     JSON.stringify({ type: 'assistant/message', time: day(0), data: { usage: { inputTokens: 1, outputTokens: 1 } } }) + '\n')
   const tail = usage.estimateToday()
-  check('增量读取只加新行', tail.today.requests === 3 && tail.today.input === 3000001,
+  check('重扫后不重复计数、新行只加一次', tail.today.requests === 3 && tail.today.input === 3000001,
     `实际 ${tail.today.requests}/${tail.today.input}`)
 
   // 路由

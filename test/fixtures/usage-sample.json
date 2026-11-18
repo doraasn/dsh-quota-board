@@ -1,0 +1,84 @@
+{
+  "today": {
+    "day": "2026-11-18",
+    "input": 1856127,
+    "output": 264758,
+    "cached": 184674816,
+    "requests": 733,
+    "cost": 1.8294
+  },
+  "days": [
+    {
+      "day": "2026-11-12",
+      "input": 0,
+      "output": 0,
+      "cached": 0,
+      "requests": 0,
+      "cost": 0
+    },
+    {
+      "day": "2026-11-13",
+      "input": 0,
+      "output": 0,
+      "cached": 0,
+      "requests": 0,
+      "cost": 0
+    },
+    {
+      "day": "2026-11-14",
+      "input": 0,
+      "output": 0,
+      "cached": 0,
+      "requests": 0,
+      "cost": 0
+    },
+    {
+      "day": "2026-11-15",
+      "input": 0,
+      "output": 0,
+      "cached": 0,
+      "requests": 0,
+      "cost": 0
+    },
+    {
+      "day": "2026-11-16",
+      "input": 143754,
+      "output": 24399,
+      "cached": 3461248,
+      "requests": 61,
+      "cost": 0.1626
+    },
+    {
+      "day": "2026-11-17",
+      "input": 93067,
+      "output": 51296,
+      "cached": 8836864,
+      "requests": 100,
+      "cost": 0.218
+    },
+    {
+      "day": "2026-11-18",
+      "input": 1856127,
+      "output": 264758,
+      "cached": 184674816,
+      "requests": 733,
+      "cost": 1.8294
+    }
+  ],
+  "models": [
+    {
+      "model": "deepseek-flash",
+      "input": 1856127,
+      "output": 264758,
+      "cached": 184674816,
+      "requests": 733,
+      "cost": 1.8294
+    }
+  ],
+  "rates": {
+    "hit": 0.003,
+    "miss": 0.15,
+    "out": 0.6,
+    "usdToCny": 7
+  }
+}
